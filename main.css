@@ -1,0 +1,91 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: #171421;
+    color: white;
+    font-family: Arial, sans-serif;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.site {
+    width: 100%;
+    max-width: 430px;
+    padding: 25px;
+    text-align: center;
+}
+
+.aviso {
+    color: #e8b7d0;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+h1 {
+    font-size: 32px;
+    margin-top: 22px;
+    margin-bottom: 15px;
+}
+
+#descricao {
+    color: #d5c9db;
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.cartao {
+    background-color: #292232;
+    border-radius: 18px;
+    padding: 25px 20px;
+}
+
+h2 {
+    font-size: 20px;
+    margin-bottom: 22px;
+}
+
+#mensagem {
+    color: #e8d9e5;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+button {
+    display: block;
+    width: 100%;
+    background-color: #d88db6;
+    color: #171421;
+    border: none;
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 12px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #f0b4d5;
+}
+
+.secundario {
+    background-color: transparent;
+    color: white;
+    border: 1px solid #8c7996;
+}
+
+.secundario:hover {
+    background-color: #403449;
+}
+
+.escondido {
+    display: none;
+}
