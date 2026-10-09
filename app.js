@@ -1,3 +1,7 @@
+/* =========================================
+   SITE DA GABI — SURPRESA + JOGO DA VELHA
+   ========================================= */
+
 const cenas = {
   inicio: {
     titulo: "Ei, Henrique... 👀",
@@ -19,14 +23,14 @@ const cenas = {
 
   teimoso: {
     titulo: "QUE HOMEM DIFÍCIL 😭",
-    mensagem: "Henrique, eu fiz um site inteiro e você já começou a dificultar meu trabalho KKKKK.",
+    mensagem: "Henrique, eu tô tentando testar minhas habilidades de programação e você já começou a dificultar meu trabalho KKKKK.",
     opcoes: [
       ["Tá bom, vai KKKK", "preparado"]
     ]
   },
 
   preparado: {
-    titulo: "Tá preparado? ",
+    titulo: "Tá preparado?",
     mensagem: "Pensa bem antes de responder.\n\nDepois não diga que não avisei...",
     opcoes: [
       ["SIM, BORA!", "vamos"],
@@ -36,7 +40,7 @@ const cenas = {
 
   nao: {
     titulo: "UÉEEEE 🤨",
-    mensagem: "COMO ASSIM NÃO???\n\nNão confia em mim, Henrique? Depois de tudo que a gente passou? Pipipipopopó KKKKK.",
+    mensagem: "COMO ASSIM NÃO???\n\nHenrique, você foi convocado para participar dos meus testes de programação KKKKK.\n\nEu preciso aprender a fazer essas besteiras sozinha, então colabora com o meu curso! 😂",
     opcoes: [
       ["Tá, agora tô preparado 😂", "vamos"],
       ["Ainda não", "insiste"]
@@ -45,7 +49,7 @@ const cenas = {
 
   insiste: {
     titulo: "HENRIQUEEEEE 😭",
-    mensagem: "Meu querido, colabora comigo! Eu tô tentando criar um clima de suspense aqui KKKKK.",
+    mensagem: "Meu querido, colabora comigo! Eu tô tentando criar um clima de suspense aqui KKKKK.\n\nVocê não pode abandonar minha experiência científica!",
     opcoes: [
       ["TÁ BOM, VAMOS!", "vamos"]
     ]
@@ -103,29 +107,77 @@ const cenas = {
 
   final: {
     titulo: "PARABÉÉÉÉNS!!! 🎉",
-    mensagem: "HENRIQUEEEEE!\n\nVOCÊ FOI A PRIMEIRA PESSOA A ENTRAR EM UM SITE QUE EU FIZZZZZ!!!\n\nObrigada por ser minha cobaia oficial de programação KKKKK ❤️",
+    mensagem: "HENRIQUEEEEE!\n\nVOCÊ FOI A PRIMEIRA PESSOA A ENTRAR EM UM SITE QUE EU FIZZZZZ!!!\n\nSIM, FUI EU QUE PROGRAMEI ESSA BESTEIRA TODA KKKKK!\n\nObrigada por ser minha cobaia oficial de programação! Hoje é uma pegadinha, amanhã pode ser um aniversário, uma homenagem ou uma indireta bem programada KKKKK.\n\nE agora você vai ter que me ajudar a testar mais uma coisa... 👀\n\n🎁 BÔNUS DESBLOQUEADO!",
     foto: true,
     opcoes: [
+      ["❌ DESAFIAR O COMPUTADOR ⭕", "jogoVelha"],
       ["Ver tudo de novo 🔄", "inicio"]
     ]
   }
 };
 
+/* =========================================
+   VARIÁVEIS DO JOGO
+   ========================================= */
+
+let tabuleiroVelha = Array(9).fill("");
+let partidaTerminou = false;
+let aguardandoComputador = false;
+let timerComputador = null;
+let temporizadorConfetes = null;
+
+let vitoriasHenrique = 0;
+let vitoriasComputador = 0;
+let empatesVelha = 0;
+
+const combinacoesVelha = [
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8],
+  [0, 4, 8],
+  [2, 4, 6]
+];
+
+/* =========================================
+   NAVEGAÇÃO DO SITE
+   ========================================= */
+
 function mostrarCena(nome) {
+  clearTimeout(timerComputador);
+  aguardandoComputador = false;
+
+  if (nome === "jogoVelha") {
+    abrirJogoVelha();
+    return;
+  }
+
   const cena = cenas[nome];
+  if (!cena) return;
 
   document.body.classList.toggle("alerta", nome === "alerta");
+  document.body.classList.toggle("final", nome === "final");
+  document.body.classList.remove("jogando-velha");
 
   const cartao = document.querySelector(".cartao");
-  cartao.style.animation = "none";
-  void cartao.offsetWidth;
-  cartao.style.animation = "aparecer .5s ease";
+
+  if (cartao) {
+    cartao.style.animation = "none";
+    void cartao.offsetWidth;
+    cartao.style.animation = "aparecer .5s ease";
+  }
 
   document.getElementById("titulo").textContent = cena.titulo;
   document.getElementById("mensagem").textContent = cena.mensagem;
 
+  // Compatível com seu HTML original.
   const areaFoto = document.getElementById("foto-area");
-  areaFoto.replaceChildren();
+
+  if (areaFoto) {
+    areaFoto.replaceChildren();
+  }
 
   const areaBotoes = document.getElementById("botoes");
   areaBotoes.replaceChildren();
@@ -138,25 +190,52 @@ function mostrarCena(nome) {
       botao.classList.add("secundario");
     }
 
-    botao.addEventListener("click", () => mostrarCena(destino));
+    botao.addEventListener("click", () => {
+      mostrarCena(destino);
+    });
+
     areaBotoes.appendChild(botao);
   });
 
   if (nome === "final") {
     soltarConfetes();
+  } else {
+    limparConfetes();
   }
 
   window.scrollTo(0, 0);
 }
 
-function soltarConfetes() {
-  const area = document.getElementById("confetes");
-  area.replaceChildren();
+/* =========================================
+   CONFETES
+   ========================================= */
 
-  const cores = ["#ff8ac5", "#ffd166", "#a78bfa", "#8be9fd"];
+function limparConfetes() {
+  clearTimeout(temporizadorConfetes);
+
+  const area = document.getElementById("confetes");
+
+  if (area) {
+    area.replaceChildren();
+  }
+}
+
+function soltarConfetes() {
+  limparConfetes();
+
+  const area = document.getElementById("confetes");
+  if (!area) return;
+
+  const cores = [
+    "#ff8ac5",
+    "#ffd166",
+    "#a78bfa",
+    "#8be9fd"
+  ];
 
   for (let i = 0; i < 70; i++) {
     const confete = document.createElement("span");
+
     confete.className = "confete";
     confete.style.left = Math.random() * 100 + "%";
     confete.style.backgroundColor = cores[i % cores.length];
@@ -165,162 +244,29 @@ function soltarConfetes() {
     area.appendChild(confete);
   }
 
-  setTimeout(() => area.replaceChildren(), 6000);
+  temporizadorConfetes = setTimeout(() => {
+    area.replaceChildren();
+  }, 6000);
 }
 
-mostrarCena("inicio");
 /* =========================================
-   BÔNUS: JOGO DA VELHA DO HENRIQUE
-   Cole depois de mostrarCena("inicio");
+   ABRIR JOGO DA VELHA
    ========================================= */
 
-// Coloca o botão do jogo na surpresa final.
-cenas.final.botoes.unshift([
-  "❌ DESAFIAR O COMPUTADOR ⭕",
-  "jogoVelha"
-]);
-
-// Preserva o funcionamento original das cenas.
-const mostrarCenaSemJogo = mostrarCena;
-
-let tabuleiroVelha = Array(9).fill("");
-let partidaTerminou = false;
-let aguardandoComputador = false;
-let timerComputador = null;
-let vitoriasHenrique = 0;
-let vitoriasComputador = 0;
-let empatesVelha = 0;
-
-// Combinações que vencem o jogo.
-const combinacoesVelha = [
-  [0, 1, 2],
-  [3, 4, 5],
-  [6, 7, 8],
-  [0, 3, 6],
-  [1, 4, 7],
-  [2, 5, 8],
-  [0, 4, 8],
-  [2, 4, 6]
-];
-
-// Verifica vitória, empate ou partida em andamento.
-function verificarResultado(tabuleiro) {
-  for (const combinacao of combinacoesVelha) {
-    const [a, b, c] = combinacao;
-
-    if (
-      tabuleiro[a] &&
-      tabuleiro[a] === tabuleiro[b] &&
-      tabuleiro[b] === tabuleiro[c]
-    ) {
-      return {
-        vencedor: tabuleiro[a],
-        casas: combinacao
-      };
-    }
-  }
-
-  if (tabuleiro.every(casa => casa !== "")) {
-    return { vencedor: "empate", casas: [] };
-  }
-
-  return null;
-}
-
-// Inteligência do computador.
-// X = Henrique | O = Computador
-function calcularMelhorJogada(tabuleiro, jogador, profundidade) {
-  const resultado = verificarResultado(tabuleiro);
-
-  if (resultado) {
-    if (resultado.vencedor === "O") {
-      return 10 - profundidade;
-    }
-
-    if (resultado.vencedor === "X") {
-      return profundidade - 10;
-    }
-
-    return 0;
-  }
-
-  const pontuacoes = [];
-
-  for (let i = 0; i < 9; i++) {
-    if (tabuleiro[i] !== "") continue;
-
-    tabuleiro[i] = jogador;
-
-    const pontos = calcularMelhorJogada(
-      tabuleiro,
-      jogador === "O" ? "X" : "O",
-      profundidade + 1
-    );
-
-    tabuleiro[i] = "";
-    pontuacoes.push(pontos);
-  }
-
-  if (jogador === "O") {
-    return Math.max(...pontuacoes);
-  }
-
-  return Math.min(...pontuacoes);
-}
-
-function escolherJogadaComputador() {
-  let melhorPontuacao = -Infinity;
-  let melhoresCasas = [];
-
-  for (let i = 0; i < 9; i++) {
-    if (tabuleiroVelha[i] !== "") continue;
-
-    tabuleiroVelha[i] = "O";
-
-    const pontos = calcularMelhorJogada(
-      tabuleiroVelha,
-      "X",
-      1
-    );
-
-    tabuleiroVelha[i] = "";
-
-    if (pontos > melhorPontuacao) {
-      melhorPontuacao = pontos;
-      melhoresCasas = [i];
-    } else if (pontos === melhorPontuacao) {
-      melhoresCasas.push(i);
-    }
-  }
-
-  // Entre jogadas igualmente boas, escolhe uma aleatória.
-  return melhoresCasas[
-    Math.floor(Math.random() * melhoresCasas.length)
-  ];
-}
-
-// Modifica apenas a navegação para incluir o jogo.
-mostrarCena = function(nome) {
-  clearTimeout(timerComputador);
-  aguardandoComputador = false;
-
-  if (nome === "jogoVelha") {
-    abrirJogoVelha();
-    return;
-  }
-
-  document.body.classList.remove("jogando-velha");
-  mostrarCenaSemJogo(nome);
-};
-
 function abrirJogoVelha() {
+  limparConfetes();
+
   document.body.classList.remove("alerta", "final");
   document.body.classList.add("jogando-velha");
 
-  document.getElementById("simbolo").textContent = "🎮";
+  const areaFoto = document.getElementById("foto-area");
+
+  if (areaFoto) {
+    areaFoto.replaceChildren();
+  }
 
   document.getElementById("titulo").textContent =
-    "HENRIQUE VS. COMPUTADOR";
+    "HENRIQUE VS. COMPUTADOR 🎮";
 
   document.getElementById("mensagem").textContent =
     "ACHOU QUE TINHA ACABADO? KKKKK!\n\n" +
@@ -348,11 +294,16 @@ function abrirJogoVelha() {
         </div>
       </div>
 
-      <p id="status-velha" class="status-velha">
+      <p id="status-velha" class="status-velha"
+         aria-live="polite">
         Sua vez, Henrique! ❌
       </p>
 
-      <div id="tabuleiro-velha" class="tabuleiro"></div>
+      <div
+        id="tabuleiro-velha"
+        class="tabuleiro"
+        aria-label="Tabuleiro do jogo da velha">
+      </div>
 
       <p class="dica-velha">
         Você é o X. O computador é o O.<br>
@@ -393,6 +344,115 @@ function abrirJogoVelha() {
   window.scrollTo(0, 0);
 }
 
+/* =========================================
+   REGRAS DO JOGO
+   ========================================= */
+
+function verificarResultado(tabuleiro) {
+  for (const combinacao of combinacoesVelha) {
+    const [a, b, c] = combinacao;
+
+    if (
+      tabuleiro[a] !== "" &&
+      tabuleiro[a] === tabuleiro[b] &&
+      tabuleiro[b] === tabuleiro[c]
+    ) {
+      return {
+        vencedor: tabuleiro[a],
+        casas: combinacao
+      };
+    }
+  }
+
+  if (tabuleiro.every(casa => casa !== "")) {
+    return {
+      vencedor: "empate",
+      casas: []
+    };
+  }
+
+  return null;
+}
+
+/* =========================================
+   INTELIGÊNCIA DO COMPUTADOR
+   ========================================= */
+
+function calcularMelhorJogada(tabuleiro, jogador, profundidade) {
+  const resultado = verificarResultado(tabuleiro);
+
+  if (resultado) {
+    if (resultado.vencedor === "O") {
+      return 10 - profundidade;
+    }
+
+    if (resultado.vencedor === "X") {
+      return profundidade - 10;
+    }
+
+    return 0;
+  }
+
+  const pontuacoes = [];
+
+  for (let i = 0; i < 9; i++) {
+    if (tabuleiro[i] !== "") continue;
+
+    tabuleiro[i] = jogador;
+
+    const pontos = calcularMelhorJogada(
+      tabuleiro,
+      jogador === "O" ? "X" : "O",
+      profundidade + 1
+    );
+
+    tabuleiro[i] = "";
+    pontuacoes.push(pontos);
+  }
+
+  return jogador === "O"
+    ? Math.max(...pontuacoes)
+    : Math.min(...pontuacoes);
+}
+
+function escolherJogadaComputador() {
+  let melhorPontuacao = -Infinity;
+  let melhoresCasas = [];
+
+  for (let i = 0; i < 9; i++) {
+    if (tabuleiroVelha[i] !== "") continue;
+
+    tabuleiroVelha[i] = "O";
+
+    const pontos = calcularMelhorJogada(
+      tabuleiroVelha,
+      "X",
+      1
+    );
+
+    tabuleiroVelha[i] = "";
+
+    if (pontos > melhorPontuacao) {
+      melhorPontuacao = pontos;
+      melhoresCasas = [i];
+    } else if (pontos === melhorPontuacao) {
+      melhoresCasas.push(i);
+    }
+  }
+
+  if (melhoresCasas.length === 0) {
+    return undefined;
+  }
+
+  return melhoresCasas[
+    Math.floor(Math.random() * melhoresCasas.length)
+  ];
+}
+
+/* =========================================
+   COMEÇAR UMA PARTIDA
+   ========================================= */
+
 function iniciarPartidaVelha() {
   clearTimeout(timerComputador);
 
@@ -411,10 +471,7 @@ function iniciarPartidaVelha() {
 
     casa.className = "casa";
     casa.type = "button";
-    casa.setAttribute(
-      "aria-label",
-      "Casa " + (i + 1)
-    );
+    casa.setAttribute("aria-label", "Casa " + (i + 1));
 
     casa.addEventListener("click", () => {
       jogarComoHenrique(i);
@@ -426,6 +483,10 @@ function iniciarPartidaVelha() {
   atualizarPlacarVelha();
   desenharTabuleiroVelha();
 }
+
+/* =========================================
+   JOGADA DO HENRIQUE
+   ========================================= */
 
 function jogarComoHenrique(posicao) {
   if (
@@ -442,15 +503,17 @@ function jogarComoHenrique(posicao) {
   if (conferirFimDaPartida()) return;
 
   aguardandoComputador = true;
+  desenharTabuleiroVelha();
 
   document.getElementById("status-velha").textContent =
     "O computador está pensando... 🤔";
 
-  // Pequena pausa para parecer que o computador pensa.
   timerComputador = setTimeout(() => {
     const posicaoComputador = escolherJogadaComputador();
 
-    if (posicaoComputador === undefined) return;
+    if (posicaoComputador === undefined) {
+      return;
+    }
 
     tabuleiroVelha[posicaoComputador] = "O";
     aguardandoComputador = false;
@@ -463,6 +526,10 @@ function jogarComoHenrique(posicao) {
     }
   }, 450);
 }
+
+/* =========================================
+   DESENHAR TABULEIRO
+   ========================================= */
 
 function desenharTabuleiroVelha(casasVencedoras = []) {
   const casas = document.querySelectorAll(
@@ -494,6 +561,10 @@ function desenharTabuleiroVelha(casasVencedoras = []) {
   });
 }
 
+/* =========================================
+   RESULTADO E PLACAR
+   ========================================= */
+
 function conferirFimDaPartida() {
   const resultado = verificarResultado(tabuleiroVelha);
 
@@ -511,12 +582,14 @@ function conferirFimDaPartida() {
       "🏆 MILAGRE! HENRIQUE VENCEU! KKKKK!";
 
     soltarConfetes();
+
   } else if (resultado.vencedor === "O") {
     vitoriasComputador++;
 
     status.textContent =
       "😂 HENRIQUE, VOCÊ PERDEU PRA UM SITE " +
       "QUE A GABI FEZ KKKKKKK!";
+
   } else {
     empatesVelha++;
 
@@ -540,3 +613,9 @@ function atualizarPlacarVelha() {
   document.getElementById("placar-empates").textContent =
     empatesVelha;
 }
+
+/* =========================================
+   INICIAR SITE
+   ========================================= */
+
+mostrarCena("inicio");
