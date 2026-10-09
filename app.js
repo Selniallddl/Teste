@@ -127,13 +127,6 @@ function mostrarCena(nome) {
   const areaFoto = document.getElementById("foto-area");
   areaFoto.replaceChildren();
 
-  if (cena.foto) {
-    const foto = document.createElement("img");
-    foto.src = "foto.jpg";
-    foto.alt = "Foto surpresa";
-    areaFoto.appendChild(foto);
-  }
-
   const areaBotoes = document.getElementById("botoes");
   areaBotoes.replaceChildren();
 
